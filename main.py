@@ -3,7 +3,6 @@ import customtkinter
 import platform
 import sqlite3
 import tkinter.messagebox as messagebox
-import sys
 from cryptography.fernet import Fernet
 import os
 import subprocess
@@ -85,14 +84,17 @@ def initial_setup(api, secret, payday, popup):
     cursor = conn.cursor()
 
     key = Fernet.generate_key()
+    print(f"Key: {key}")
     cipher = Fernet(key)
     initial_stock = 1
 
     encrypted_api_key = cipher.encrypt(api.encode())
     encrypted_secret_key = cipher.encrypt(secret.encode())
 
-    cursor.execute("INSERT INTO user (api_key, secret, key, pay_date, cur_stock) VALUES (?,?,?,?,?)", (encrypted_api_key, encrypted_secret_key, key, payday, initial_stock ))
+    cursor.execute("INSERT INTO user (api_key, secret, key, pay_date, cur_stock) VALUES (?,?,?,?,?)", (encrypted_api_key, encrypted_secret_key, key, payday, initial_stock, ))
 
+    conn.commit()
+    conn.close()
     popup.destroy()
 
 def show_popup():
@@ -132,11 +134,9 @@ def runScript():
     current_working_dir = os.getcwd()
     bcknd_script = os.path.join(current_working_dir, "script.py")
 
-    print(bcknd_script)
-
     if platform == "Windows":
         process = subprocess.Popen(["pythonw", bcknd_script])
-        
+        print(f"Process id is {process.pid}")
         return process.pid
     else:
         process = subprocess.Popen(["python3", bcknd_script, "&"])
@@ -241,8 +241,9 @@ logs_text.pack(pady=12, padx=10, fill="both", expand=True)
 
 logs_frame.pack_forget()
 
-bcknd_script_pid = runScript()
+
 checkFirstRun()
-print(f"Process id is {bcknd_script_pid}")
+bcknd_script_id = runScript()
+
 # Run application
 root.mainloop()
