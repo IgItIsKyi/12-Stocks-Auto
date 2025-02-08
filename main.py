@@ -2,6 +2,7 @@
 import customtkinter
 import platform
 import sqlite3
+from tkinter import ttk
 import tkinter.messagebox as messagebox
 from cryptography.fernet import Fernet
 import os
@@ -17,6 +18,7 @@ customtkinter.set_default_color_theme("dark-blue")
 root = customtkinter.CTk()
 root.title("12 Auto Stocks")
 root.geometry("500x350")
+root.resizable(False, False)
 
 def checkFirstRun():
     try:
@@ -192,6 +194,20 @@ def update_keys(api, secret, process_id):
     except:
         messagebox.showwarning("Error", "Unable to update")  
 
+def getLogs():
+    # SQL Connection
+    conn = sqlite3.connect("12Auto.db")
+    cursor = conn.cursor()
+
+    # Get all log information from SQL Table
+    cursor.execute("SELECT info, date FROM logs")
+    logs = cursor.fetchall()
+
+    conn.close()
+
+    for log in logs:
+        table.insert("", "end", values=log)
+
 
 
 
@@ -229,19 +245,36 @@ update_button.pack(pady=12, padx=10)
 # End of Info Page
 
 # Logs Page
+style = ttk.Style()
+style.configure("Treeview",
+                 backgrouund="#242424",
+                 foreground="black",
+                 font=("Roboto", 12))
+
+style.configure("Treeview.Heading", font=('Roboto', 14, 'bold'))
+
+
+
 logs_frame = customtkinter.CTkFrame(master=main_frame)
 logs_frame.pack(pady=20, padx=60, fill="both", expand=True)
 
 logs_label = customtkinter.CTkLabel(master=logs_frame, text="Logs", font=("Roboto", 24))
-logs_label.pack(pady=12, padx=10)
+logs_label.pack(pady=8, padx=10)
 
-logs_text = customtkinter.CTkTextbox(master=logs_frame)
-logs_text.pack(pady=12, padx=10, fill="both", expand=True)
+table = ttk.Treeview(logs_frame, columns=("Log", "Date"), show="headings")
+table.heading("Date", text="Date")
+table.column("Date", width=100, anchor="center")
+table.heading("Log", text="Log")
+table.column("Log", width=375)
+table.pack(pady=12, padx=10, fill="both", expand=True)
+
+
+# End of Logs Page
 
 
 logs_frame.pack_forget()
 
-
+getLogs()
 checkFirstRun()
 bcknd_script_id = runScript()
 
