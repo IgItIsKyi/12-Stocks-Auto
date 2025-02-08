@@ -44,7 +44,6 @@ def submitOrder():
     # Search the id in the stocks table
     cursor.execute("SELECT stock_sym FROM stocks WHERE id = ?", (stock_id,))
     stock = cursor.fetchone()[0]
-    print("Stock:", stock)
     order = False
 
 
@@ -53,7 +52,7 @@ def submitOrder():
             # Submit order to current stock
             api.submit_order(symbol=stock,type="market",qty=1)
 
-            note = "Submitted order for " + stock
+            note = "Submitted order successfully for " + stock
             date = datetime.now().strftime("%m/%d/%Y")
             cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (note, date))
             order = True
@@ -61,13 +60,14 @@ def submitOrder():
             # Move to next stock in table
             cursor.execute("SELECT id FROM stocks WHERE stock_sym = ?", (stock,))
             current_stock = cursor.fetchone()[0]
+
             if current_stock == 12:
                 next_stock = 1
             else:
                 next_stock = current_stock + 1
+                
             cursor.execute("UPDATE user SET cur_stock = ? WHERE id = 1", (next_stock,))
             conn.commit()
-            print("Next stock is #" + str(next_stock))
 
         except:
             date = datetime.now().strftime("%m/%d/%Y")
