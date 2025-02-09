@@ -144,7 +144,6 @@ def runScript():
 
         if platform == "Windows":
             process = subprocess.Popen(["pythonw", bcknd_script])
-            print(f"Process id is {process.pid}")
             updateProcessId(process.pid)
             return process.pid
         else:
@@ -235,8 +234,6 @@ def checkScriptRunning(target_pid):
 
     try:
         process = psutil.Process(int(target_pid))
-
-        print(f"Process name: {process.name()}")
 
         if process.name() == "pythonw.exe":
             return True
