@@ -10,7 +10,7 @@ import subprocess
 import psutil
 
 # Global Variables
-bcknd_script_pid = 0
+
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("dark-blue")
@@ -28,6 +28,7 @@ def checkFirstRun():
         
     except:
         # Create popup to get initial SQL information
+        buildTables()
         show_popup()
 
 def buildTables():
@@ -43,7 +44,8 @@ def buildTables():
         secret BLOB,
         key BLOB,
         pay_date TEXT,
-        cur_stock TEXT
+        cur_stock TEXT, 
+        process_pid TEXT
     )
     """)
 
@@ -80,7 +82,6 @@ def buildTables():
 
 
 def initial_setup(api, secret, payday, popup):
-    buildTables()
 
     conn = sqlite3.connect("12Auto.db")
     cursor = conn.cursor()
@@ -119,8 +120,6 @@ def show_popup():
         submit_button = customtkinter.CTkButton(master=popup, text= "Submit", command= lambda: initial_setup(api_key.get(), secret_key.get(), next_payday.get(), popup))
         submit_button.pack(pady=12, padx=10)           
 
-
-
 def get_platform():
     if platform.system() == "Windows":
         return "Windows"
@@ -130,19 +129,28 @@ def get_platform():
         return "mac"
 
 def runScript():
-    # Run script for stocks
-    platform = get_platform()
+    Running = checkScriptRunning(bcknd_script_pid)
 
-    current_working_dir = os.getcwd()
-    bcknd_script = os.path.join(current_working_dir, "script.py")
+    if Running == True:
+        stopScript(bcknd_script_pid)
+        runScript()
 
-    if platform == "Windows":
-        process = subprocess.Popen(["pythonw", bcknd_script])
-        print(f"Process id is {process.pid}")
-        return process.pid
     else:
-        process = subprocess.Popen(["python3", bcknd_script, "&"])
-        return process.pid
+        # Run script for stocks
+        platform = get_platform()
+
+        current_working_dir = os.getcwd()
+        bcknd_script = os.path.join(current_working_dir, "script.py")
+
+        if platform == "Windows":
+            process = subprocess.Popen(["pythonw", bcknd_script])
+            print(f"Process id is {process.pid}")
+            updateProcessId(process.pid)
+            return process.pid
+        else:
+            process = subprocess.Popen(["python3", bcknd_script, "&"])
+            updateProcessId(process.pid)
+            return process.pid
 
 def stopScript(target_pid):
     try: 
@@ -208,8 +216,50 @@ def getLogs():
     for log in logs:
         table.insert("", "end", values=log)
 
+def getProcessId():
+    # SQL Connection
+    conn = sqlite3.connect("12Auto.db")
+    cursor = conn.cursor()
+
+    try: 
+        cursor.execute("SELECT process_pid FROM user WHERE id = 1")
+        pid = cursor.fetchone()
+        return pid
+
+    except:
+        return 0
 
 
+def checkScriptRunning(target_pid):
+    # SQL Connection
+    conn = sqlite3.connect("12Auto.db")
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT process_pid FROM user WHERE id = 1")
+        bcknd_script_pid = cursor.fetchone()
+
+        process = psutil.Process(target_pid)
+
+        if process.name == "python":
+            return True
+
+    except:
+        return False
+
+def updateProcessId(new_pid):
+    # SQL Connection
+    conn = sqlite3.connect("12Auto.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+                    UPDATE user
+                    SET process_pid = ?
+                    Where id = 1
+                    """, (new_pid,)
+                )
+
+    
 
 # NavBar
 nav_frame = customtkinter.CTkFrame(master=root)
@@ -274,9 +324,15 @@ table.pack(pady=12, padx=10, fill="both", expand=True)
 
 logs_frame.pack_forget()
 
-getLogs()
 checkFirstRun()
-bcknd_script_id = runScript()
+
+try:
+    getLogs()
+except:
+    ...
+
+bcknd_script_pid = getProcessId()
+bcknd_script_pid = runScript()
 
 # Run application
 root.mainloop()
