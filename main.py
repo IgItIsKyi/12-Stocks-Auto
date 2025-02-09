@@ -153,6 +153,7 @@ def runScript():
             return process.pid
 
 def stopScript(target_pid):
+    target_pid = int(target_pid)
     try: 
         process = psutil.Process(target_pid)
 
@@ -224,24 +225,20 @@ def getProcessId():
     try: 
         cursor.execute("SELECT process_pid FROM user WHERE id = 1")
         pid = cursor.fetchone()
-        return pid
+        return pid[0]
 
     except:
         return 0
 
 
 def checkScriptRunning(target_pid):
-    # SQL Connection
-    conn = sqlite3.connect("12Auto.db")
-    cursor = conn.cursor()
 
     try:
-        cursor.execute("SELECT process_pid FROM user WHERE id = 1")
-        bcknd_script_pid = cursor.fetchone()
+        process = psutil.Process(int(target_pid))
 
-        process = psutil.Process(target_pid)
+        print(f"Process name: {process.name()}")
 
-        if process.name == "python":
+        if process.name() == "pythonw.exe":
             return True
 
     except:
@@ -258,6 +255,9 @@ def updateProcessId(new_pid):
                     Where id = 1
                     """, (new_pid,)
                 )
+    
+    conn.commit()
+    conn.close()
 
     
 
@@ -332,7 +332,9 @@ except:
     ...
 
 bcknd_script_pid = getProcessId()
-bcknd_script_pid = runScript()
+running = checkScriptRunning(bcknd_script_pid)
+if running == False: 
+    bcknd_script_pid = runScript()
 
 # Run application
 root.mainloop()
