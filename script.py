@@ -4,7 +4,7 @@ import time
 from datetime import datetime, timedelta
 from alpaca_trade_api.rest import REST
 
-BASE_URL = 'https://paper-api.alpaca.markets'  # Needed for Alpaca Account
+BASE_URL = 'https://api.alpaca.markets'  # Needed for Alpaca Account
 run = True   # Keep program running
 
 
