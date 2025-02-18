@@ -2,7 +2,7 @@
 import customtkinter
 import platform
 import sqlite3
-from tkinter import ttk
+from tkinter import StringVar, ttk
 import tkinter.messagebox as messagebox
 from cryptography.fernet import Fernet
 import os
@@ -81,20 +81,28 @@ def buildTables():
     conn.close()
 
 
-def initial_setup(api, secret, payday, popup):
+def initial_setup(api, secret, payday, popup, initial_stock):
 
     conn = sqlite3.connect("12Auto.db")
     cursor = conn.cursor()
 
+    print(f'Stock: {initial_stock}')
+    try:
+        cursor.execute("SELECT id FROM stocks WHERE stock_sym = ?", (initial_stock, ))
+        stock = cursor.fetchone()[0]
+    except:
+        stock = 1
+
+    print(f"Stock number: {stock}")
+
     key = Fernet.generate_key()
     print(f"Key: {key}")
     cipher = Fernet(key)
-    initial_stock = 1
 
     encrypted_api_key = cipher.encrypt(api.encode())
     encrypted_secret_key = cipher.encrypt(secret.encode())
 
-    cursor.execute("INSERT INTO user (api_key, secret, key, pay_date, cur_stock) VALUES (?,?,?,?,?)", (encrypted_api_key, encrypted_secret_key, key, payday, initial_stock, ))
+    cursor.execute("INSERT INTO user (api_key, secret, key, pay_date, cur_stock) VALUES (?,?,?,?,?)", (encrypted_api_key, encrypted_secret_key, key, payday, stock, ))
 
     conn.commit()
     conn.close()
@@ -117,7 +125,30 @@ def show_popup():
         next_payday = customtkinter.CTkEntry(master=popup, placeholder_text="Next Pay Day ( MM/DD/YYYY )")
         next_payday.pack(pady=12, padx=10)
 
-        submit_button = customtkinter.CTkButton(master=popup, text= "Submit", command= lambda: initial_setup(api_key.get(), secret_key.get(), next_payday.get(), popup))
+        options = [
+            ' ',
+            'CSCO', 
+            'LNC', 
+            'ABBV', 
+            'CFG', 
+            'KMI', 
+            'DUK', 
+            'MMM', 
+            'WHR', 
+            'KEY', 
+            'CCI', 
+            'MO', 
+            'WPC'
+        ]
+
+        clicked = StringVar()
+
+        clicked.set('CSCO')
+
+        drop = ttk.OptionMenu(popup, clicked, *options)
+        drop.pack()
+
+        submit_button = customtkinter.CTkButton(master=popup, text= "Submit", command= lambda: initial_setup(api_key.get(), secret_key.get(), next_payday.get(), popup, clicked.get()))
         submit_button.pack(pady=12, padx=10)           
 
 def get_platform():
@@ -332,6 +363,7 @@ bcknd_script_pid = getProcessId()
 running = checkScriptRunning(bcknd_script_pid)
 if running == False: 
     bcknd_script_pid = runScript()
+
 
 # Run application
 root.mainloop()
