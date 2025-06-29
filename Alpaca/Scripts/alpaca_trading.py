@@ -4,24 +4,37 @@ import time
 from datetime import datetime, timedelta
 from alpaca_trade_api.rest import REST
 
-BASE_URL = 'https://api.alpaca.markets'  # Needed for Alpaca Account
-run = True   # Keep program running
+BASE_URL = 'https://paper-api.alpaca.markets'  # Needed for Alpaca Account
+   # Keep program running
 
 
 # SQL Connection
-conn = sqlite3.connect("12Auto.db")
+conn = sqlite3.connect(r".\Alpaca\Database\\12Auto.db")
 cursor = conn.cursor()
+
+
 
 # Calculate and update next run date
 def getNextRunDate(old_date):
-    data_OD = datetime.strptime(old_date, "%m/%d/%Y")
-    days_14 = timedelta(days=14)
-    next_run_date = data_OD + days_14
-    
-    next_run_date = next_run_date.strftime("%m/%d/%Y")
-    print("New paydate: ", next_run_date)
-    cursor.execute("UPDATE user SET pay_date = ? WHERE id = 1", (next_run_date,))
-    conn.commit()
+
+    testing = False
+
+    if testing == False:
+        data_OD = datetime.strptime(old_date, "%m/%d/%Y")
+        days_14 = timedelta(days=14)
+        next_run_date = data_OD + days_14
+        
+        next_run_date = next_run_date.strftime("%m/%d/%Y")
+        print("New paydate: ", next_run_date)
+        cursor.execute("UPDATE user SET pay_date = ? WHERE id = 1", (next_run_date,))
+        conn.commit()
+    else:
+        data_OD = datetime.strptime(old_date, "%m/%d/%Y")
+        days_14 = timedelta(seconds=3)
+        next_run_date = data_OD + days_14
+        
+        next_run_date = next_run_date.strftime("%m/%d/%Y")
+
 
 # Retrieve and decrypt data
 def getAcctInfo():
@@ -36,7 +49,7 @@ def getAcctInfo():
 
     return decrypted_apiKey, decrypted_secretKey
 
-def submitOrder():
+def submitAlpacaOrder():
     # Figure out what stock id the user has
     cursor.execute("SELECT cur_stock FROM user WHERE id = 1")
     stock_id = cursor.fetchone()[0]
@@ -82,7 +95,7 @@ API_KEY, SECRET_KEY = getAcctInfo()
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 
 
-while(run):
+while(True):
 
     cursor.execute("SELECT pay_date FROM user WHERE id = 1")
     paydate = cursor.fetchone()[0]
@@ -92,9 +105,10 @@ while(run):
     if current_day == paydate:
         print("It's payday!")
         getNextRunDate(paydate)
-        submitOrder()
+        submitAlpacaOrder()
     else:
         print("Not payday... Sorry")
         time.sleep(82800)
+
 
 conn.close()
