@@ -20,24 +20,21 @@ def getNextRunDate(old_date):
     testing = False
 
     if testing == False:
-        data_OD = datetime.strptime(old_date, "%m/%d/%Y")
         days_14 = timedelta(days=14)
-        next_run_date = data_OD + days_14
+        next_run_date = old_date + days_14
         
         next_run_date = next_run_date.strftime("%m/%d/%Y")
         print("New paydate: ", next_run_date)
         cursor.execute("UPDATE user SET pay_date = ? WHERE id = 1", (next_run_date,))
         conn.commit()
     else:
-        data_OD = datetime.strptime(old_date, "%m/%d/%Y")
         days_14 = timedelta(seconds=3)
-        next_run_date = data_OD + days_14
+        next_run_date = old_date + days_14
         
         next_run_date = next_run_date.strftime("%m/%d/%Y")
 
-
 # Retrieve and decrypt data
-def getAcctInfo():
+def getAccountInfo():
     cursor.execute("SELECT key FROM user WHERE id = 1")
     key = cursor.fetchone()
     cipher = Fernet(key[0])
@@ -90,8 +87,7 @@ def submitAlpacaOrder():
             time.sleep(86400)  # Seconds converted to a day
 
 # Script Starts here #
-
-API_KEY, SECRET_KEY = getAcctInfo()
+API_KEY, SECRET_KEY = getAccountInfo()
 api = REST(API_KEY, SECRET_KEY, BASE_URL)
 
 
@@ -100,9 +96,14 @@ while(True):
     cursor.execute("SELECT pay_date FROM user WHERE id = 1")
     paydate = cursor.fetchone()[0]
 
-    current_day = datetime.now().strftime("%m/%d/%Y")
+    current_day = datetime.now()
+    paydate = datetime.strptime(paydate, "%m/%d/%Y")
 
-    if current_day == paydate:
+    print(current_day >= paydate)
+
+
+    if current_day >= paydate:
+
         print("It's payday!")
         getNextRunDate(paydate)
         submitAlpacaOrder()

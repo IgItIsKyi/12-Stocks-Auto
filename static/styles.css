@@ -1,0 +1,28 @@
+.dot {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.running {
+  background-color: #2ecc71;
+}
+
+.not-running {
+  background-color: #cc0505;
+}
+
+.status {
+  margin-bottom: 20px;
+}
+
+.form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: white;
+            opacity: 0.5; /* Firefox */
+}
+
+.no-underline {
+  text-decoration: none;
+}

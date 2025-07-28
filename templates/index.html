@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <title>12 Auto Stocks</title>
+</head>
+<body class="bg-dark" style="margin-left: 50px; margin-top: 5%;">
+    <div id="main-info" class="container text-center">
+        <div class="row align-items-center">
+            <!-------  General Info Section --------->
+            <div id="left-side" class="bg-dark col my-2 align-items-center border border-secondary border-opacity-10 rounded-4">
+                <h3 class="text-white align-items-start m-3" id="welcomeHdr">Welcome back!</h3>
+                <div id="info" class="text-white-50 mx-3">
+                    <p class="d-flex align-items-start my-2">Last Bought Stock: '<span id="stock"> </span>'</p>
+                    <p class="d-flex align-items-start" >Account Balance: $<span id="accountValue"> </span></p>
+                    <p class="d-flex align-items-start" >Next Purchase date: `<span id="purchaseDate"> </span>`</p>
+                    <div id="WebViewElement" hidden>
+
+                    <div class="status text-white-50">
+                        {% if running == True %}
+                        <div class="d-flex flex-row align-items-center m-2">
+                            <span class="dot running align-self-center"></span> Running
+                        </div>
+                        {% else %}
+                        <div class="d-flex flex-row align-items-center m-2">
+                            <span class="dot not-running"></span> Not Running            
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button class="btn btn-danger m-3" onclick="togglePiView()">Web View</button>
+
+                    </div>    
+                </div>
+            </div>
+            <!-------  General Info Section End --------->
+
+            <!--------     Line Chart/Graph   ----------->
+            <div id="right-side" class="col" style="margin-left: 0px;">
+                <canvas id="myChart" ></canvas>        
+            </div>
+            <!--------  Line Chart/Graph End  ----------->
+        </div>
+    </div>
+
+    <!----------    Administrative Section   -------------->
+    <div class="container text-center mb-3" id="PiViewElement">
+        <h2 class="my-2 text-white">Administrative Settings</h2>
+        <div class="row align-items-center border border-secondary border-opacity-25 rounded-4" style="margin-right: 25px;">
+            <div class="col">
+                <h4 class="text-white-50 mb-3">Standby Mode</h4>
+                <button id="PiViewElement" class="btn btn-danger m-3" onclick="togglePiView()">Pi View</button>
+            </div>
+            <div class="col">
+                <h4 class="text-white-50" style="margin-top: 20px;">Status</h4>
+                <div class="status text-white-50">
+                    {% if running == True %}
+                    <div class="d-flex flex-row align-items-center m-2">
+                        <span class="dot running align-self-center"></span> Running
+                    </div>
+                    <button id="auto-script" class="btn btn-danger" value="False" onclick="running(value)">Stop</button>
+                    {% else %}
+                    <div class="d-flex flex-row align-items-center m-2">
+                        <span class="dot not-running"></span> Not Running            
+                    </div>
+                    <button id="auto-script" class="btn btn-success" value="True" onclick="running(value)">Start</button> 
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col">
+                <h4 class="text-white-50 my-1">Update Info</h4>
+                <button class="btn btn-primary my-2" data-bs-toggle="modal" data-bs-target="#infoModal">Click Here</button>
+
+                <!------- Update info pop up   ------->
+                <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header bg-dark">
+                                <h1 class="modal-title fs-5 text-white" id="infoModalLabel">Update Info</h1>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            
+                            <div class="modal-body bg-dark">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control bg-dark text-white-50 my-3" name="api-key" id="u-api-key" placeholder="Input api key here">
+                                    <input type="text" class="form-control bg-dark text-white-50" name="secret-key" id="u-secret-key" placeholder="Input secret key here">
+                                    <input type="date" class="form-control bg-dark text-white-50 my-2" name="secret-key" id="u-pay-date" placeholder="Choose next pay date here">
+                                    <div id="modalErrorMsg2" class="alert alert-danger mb-0" hidden>Both keys need to be filled in or the date needs to be filled!</div>
+                                    <div id="modalSuccessMsg2" class="alert alert-success mb-0" hidden>Keys have updated successfully!</div>
+                                    <button id="auto-script" class="btn btn-primary mt-2" onclick="updateInfo()">Send</button> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!------- end of Update info pop up   ------->
+                <!--------- Initial Setup Modal  ------------>
+                {% if firstRun == True %}
+                <div class="modal fade" id="firstRunModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="firstRunLabel" aria-hidden="true" >
+                    <div class="modal-dialog">
+                        <div class="modal-content bg-dark">
+                            <div class="modal-header bg-dark">
+                                <h1 class="modal-title fs-5 text-white text-center" id="firstRunTitleLabel">Initial Setup</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                    <input type="text" class="form-control bg-dark text-white-50 my-3" name="api-key" id="i-api-key" placeholder="input api key here">
+                                    <input type="text" class="form-control bg-dark text-white-50 my-3" name="secret-key" id="i-secret-key" placeholder="input secret key here">
+                                    <input type="date" class="form-control bg-dark text-white-50" name="pay-date" id="i-pay-date" placeholder="input next pay date here">                                
+                                        <div class="input-group my-3">
+                                            <input type="text" id="i-dropdown-input" class="form-control bg-dark text-white-50" placeholder="If none is chosen, It will be the first stock" aria-label="Text input with dropdown button" readonly>
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Stock</button>
+                                            <ul class="dropdown-menu dropdown-menu-end bg-dark text-center">
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">BDCX</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">NHPAP</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">CWPS</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">TWO</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">ABR</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">AB</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">ARLP</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">HTGC</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">SPQ</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">WHF</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">TRIN</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#">CION</a></li>
+                                            </ul>
+                                        </div>
+                                    <div id="modalErrorMsg" class="alert alert-danger mb-0" hidden>All inputs need to be filled in!</div>
+                                    <div id="modalSuccessMsg" class="alert alert-success mb-0" hidden>Keys have updated successfully!</div>
+                                    </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" onclick="initialInfo()">Submit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!--------- Initial Setup Modal  ------------>
+        </div>
+    </div>
+    <!--- Line Graph ---->
+    <!--- Modal autorun on first run ---->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const myModal = new bootstrap.Modal(document.getElementById('firstRunModal'));
+        myModal.show();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('i-dropdown-input');
+            const items = document.querySelectorAll('.dropdown-stock');
+
+            items.forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault(); // Prevent link behavior
+                input.value = this.textContent.trim(); // Set input value
+            });
+            });
+        });
+    </script>
+<!-----  End of Modal autorun  ----->
+
+    <script defer src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+</body>
+</html>
