@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
-from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables
+from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog
 from datetime import datetime
 
 app = Flask(__name__)
@@ -50,7 +50,6 @@ def status():
             "firstRun": checkFirstRun()
         })
     except:
-        print("First Run")
         return jsonify({
             "running": running
         })
@@ -58,26 +57,31 @@ def status():
 @app.route('/toggle-running', methods=['POST'])
 def toggle_running():
     global running, bcknd_script_pid
-    print("Server beginning value of running: ", running)
 
     data = request.get_json()
     running = data.get('running', False)
-    print("Get data running: ",running)
+
     if running == True:
         try:
             currentState = checkScriptRunning(bcknd_script_pid)
             if currentState == False:
                 bcknd_script_pid = runScript()
-                print("Script successfully started running.")
+                
+                log = "Script successfully started running."
+                createLog(log)
+
         except Exception as e:
-            print(f"Script did not successfully start running: {e}")
+            log = "Script did not successfully start running: " + e
+            createLog(log)
 
     else:
         try:
             stopScript(bcknd_script_pid)
-            print(f"Script successfully stopped running PID {bcknd_script_pid}")
+            log = "Script successfully stopped running PID " + bcknd_script_pid
+            createLog(log)
         except:
-            print("script did not successfully stop running.")
+            log = "script did not successfully stop running."
+            createLog(log)
 
     return jsonify(success=True, running=running)
 
@@ -113,7 +117,6 @@ def initial_info():
     except:
         print("Done testing...")
 
-    print(f"API Key: {api_key}, Secret: {secret_key}, Pay Date: {pay_date}, Stock: {stock}")
     status = initial_setup(api_key,secret_key, pay_date, stock)
 
 
@@ -141,4 +144,4 @@ def chart_data():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(port=49000)

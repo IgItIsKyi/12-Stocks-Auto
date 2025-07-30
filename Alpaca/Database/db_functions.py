@@ -46,7 +46,7 @@ def buildTables():
 
             id INTEGER PRIMARY KEY,
             info TEXT,
-            date                  
+            date TEXT               
         )
     """)
     # Create "stocks" Table and add all 12 stocks
@@ -88,43 +88,23 @@ def getLogs():
         log_info.append(log[0])
         log_date.append(log[1])
 
-    print(f"Log infos: {log_info}. \n Log Dates: {log_date}")
+        print(f"Log: {log[0]} Timestamp: {log[1]}")
 
-def update_keys(api, secret):
-
-
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        if api == "" or secret == "":
-            ...
-            # messagebox.showerror("Missing Info", "One or more boxes are empty")
-        else:
-            cursor.execute("SELECT key FROM user WHERE id = 1")
-            key = cursor.fetchone()
-            cipher = Fernet(key[0])
         
-            encrypted_api_key = cipher.encrypt(api.encode())
-            encrypted_secret_key = cipher.encrypt(secret.encode())
-
-            cursor.execute("""
-                UPDATE user
-                SET api = ?, secret = ?, did = ?
-                Where id = 1
-                """, (encrypted_api_key, encrypted_secret_key )
-            )
-
-            # messagebox.showinfo("Success", "api, secret and did updated successfully")
-            api.delete(0, "end") 
-            secret.delete(0, "end") 
+    return log_info, log_date
 
 
-            conn.commit()
-            conn.close()
+def createLog(log):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-    except:
-        ...
-        # messagebox.showwarning("Error", "Unable to update")  
+    timestamp = datetime.now().strftime("%H:%M %m/%d/%Y ")
+    cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (log, timestamp))
+    print(f"Log: {log} \nTimestamp: {timestamp}")
+
+    conn.commit()
+    conn.close()
+  
 
 def getProcessId():
     # SQL Connection
@@ -266,10 +246,14 @@ def update_keys(api_key, secret_key, paydate):
                     conn.commit()
                     conn.close()
 
+                    log = "Keys updated successfully."
+                    createLog(log)
+
                 return True
 
             except Exception as e:
-                print(f"Exception occured: {e}")
+                log = "Exception occured updating keys: " + e
+                createLog(log)
                 return False
         if paydate != "":
             try:
@@ -284,13 +268,16 @@ def update_keys(api_key, secret_key, paydate):
                     """, (paydate, )
                 )
 
-                print("Date updated successfully")
+                log = "Date updated successfully."
+                createLog(log)
+
                 conn.commit()
                 conn.close()
 
 
             except Exception as e:
-                print(f"Exception occured: {e}")
+                log = "Exception occured updating paydate: " + e
+                createLog(log)
     except:
         return False
     
@@ -325,3 +312,6 @@ def initial_setup(api, secret, payday, initial_stock):
     except Exception as e:
         print("Unsuccessful initial setup: " + e)
         return False
+    
+
+getLogs()
