@@ -95,9 +95,10 @@ def update_info():
     paydate = datetime.strptime(paydate, "%Y-%m-%d")
     paydate = datetime.strftime(paydate, "%m/%d/%Y")
 
-
+    print(paydate, api_key, secret_key)
     status = update_keys(api_key,secret_key, paydate)
 
+    print(status)
     if status == False:
         return jsonify(success=False)
     else:

@@ -39,7 +39,6 @@ fetch('/api/chart-data')
                 {
                     ticks: {
                         maxTicksLimits: 5,
-                        min: 0,
                         max: highestValue + (highestValue * 0.2),
                         stepSize: (highestValue / 3),
                         display: true

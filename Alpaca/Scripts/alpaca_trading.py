@@ -79,9 +79,9 @@ def submitAlpacaOrder():
             cursor.execute("UPDATE user SET cur_stock = ? WHERE id = 1", (next_stock,))
             conn.commit()
 
-        except:
+        except Exception as e:
             date = datetime.now().strftime("%m/%d/%Y")
-            note = "Unable to submit order. Trying again in 24 hours."
+            note = "Unable to submit order. Trying again in 24 hours. Exception: " + e
             cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (note, date))
             conn.commit()
             time.sleep(86400)  # Seconds converted to a day

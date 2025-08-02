@@ -227,7 +227,8 @@ def update_keys(api_key, secret_key, paydate):
                 conn = sqlite3.connect(db_path)
                 cursor = conn.cursor()
                 if api_key == "" or secret_key == "":
-                    return False
+                    ...
+
                 else:
                     cursor.execute("SELECT key FROM user WHERE id = 1")
                     key = cursor.fetchone()
@@ -255,6 +256,8 @@ def update_keys(api_key, secret_key, paydate):
                 log = "Exception occured updating keys: " + e
                 createLog(log)
                 return False
+            
+
         if paydate != "":
             try:
                 conn = sqlite3.connect(db_path)
@@ -268,16 +271,20 @@ def update_keys(api_key, secret_key, paydate):
                     """, (paydate, )
                 )
 
-                log = "Date updated successfully."
-                createLog(log)
+
+
 
                 conn.commit()
                 conn.close()
+                log = "Date updated successfully."
+                createLog(log)
+                return True
 
 
             except Exception as e:
                 log = "Exception occured updating paydate: " + e
                 createLog(log)
+
     except:
         return False
     
@@ -313,5 +320,3 @@ def initial_setup(api, secret, payday, initial_stock):
         print("Unsuccessful initial setup: " + e)
         return False
     
-
-getLogs()
