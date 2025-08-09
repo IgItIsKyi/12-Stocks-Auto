@@ -1,18 +1,25 @@
 from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
-from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog
+from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile
 from datetime import datetime
+import os
+import sys
+base_path = os.path.dirname(os.path.abspath(__file__))
 
-app = Flask(__name__)
+app = Flask(__name__,
+            template_folder=os.path.join(base_path, 'templates'),
+            static_folder=os.path.join(base_path, 'static'))
 
 try: 
+    firstRun = checkFirstRun()
     timestamps, equities = getChartData()
     running = checkScriptRunning(getProcessId())
     bcknd_script_pid = getProcessId()
-    firstRun = checkFirstRun()
+    
 except:
     firstRun = True
-    bcknd_script_pid = getProcessId()
+    bcknd_script_pid = 0
+    createDBFile()
     buildTables()
     running = False
 

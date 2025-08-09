@@ -4,9 +4,22 @@ from alpaca_trade_api.rest import REST
 from datetime import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
+from pathlib import Path
+
+
 BASE_URL = 'https://paper-api.alpaca.markets'
+def createDBFile():
+    # Ensure the directory exists
+    db_dir = Path("Alpaca/Database")
+    db_dir.mkdir(parents=True, exist_ok=True)
 
+    # Define the database file path
+    db_file = db_dir / "12Auto.db"
 
+    # Create the database file if it doesn't exist
+    if not db_file.exists():
+        with open(db_file, 'w') as f:
+            pass  # Just create an empty file
 
 db_path = r".\Alpaca\Database\12Auto.db"
 
@@ -118,7 +131,8 @@ def getProcessId():
         conn.close()
         return pid[0]
 
-    except:
+    except Exception as e:
+        print("No process ID found, returning 0")
         return 0
     
 def updateProcessId(new_pid):
