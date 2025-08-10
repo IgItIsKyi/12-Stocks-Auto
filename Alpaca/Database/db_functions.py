@@ -5,23 +5,35 @@ from datetime import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from pathlib import Path
+import os
+import platform
 
 
+db_file = "12Auto.db"
 BASE_URL = 'https://paper-api.alpaca.markets'
-def createDBFile():
-    # Ensure the directory exists
-    db_dir = Path("Alpaca/Database")
-    db_dir.mkdir(parents=True, exist_ok=True)
 
-    # Define the database file path
-    db_file = db_dir / "12Auto.db"
 
+def getDbPath():
+    if platform.system() == "Windows":
+        base_dir = os.getenv('APPDATA')
+        app_folder = "12-Stocks-Auto"
+        base_dir = os.path.join(base_dir, app_folder)
+        os.makedirs(base_dir, exist_ok=True)
+    else:
+        base_dir = os.path.join(os.path.expanduser("~"), ".config")
+        os.makedirs(base_dir, exist_ok=True)
+
+    database_path = os.path.join(base_dir, db_file)
+
+    return database_path
+
+db_path = getDbPath()
+
+def createDBFile(database_path):
     # Create the database file if it doesn't exist
-    if not db_file.exists():
-        with open(db_file, 'w') as f:
-            pass  # Just create an empty file
-
-db_path = r".\Alpaca\Database\12Auto.db"
+    if not os.path.exists(database_path):
+        with open(database_path, 'a'):
+            pass  # Creates an empty file
 
 def checkFirstRun():
     try:
@@ -32,8 +44,7 @@ def checkFirstRun():
     except:
         # Create popup to get initial SQL information
         buildTables()
-        return True
-    
+        return True  
 
 def buildTables():
     # SQL Connection
@@ -165,8 +176,6 @@ def nextPurchaseDate():
 
     conn.close()
 
-# Alpaca Direct Values
-
 def getAccountInfo():
     # SQL Connection
     conn = sqlite3.connect(db_path)
@@ -182,7 +191,6 @@ def getAccountInfo():
     decrypted_secretKey = cipher.decrypt(encrypted_row[1]).decode()
 
     return decrypted_apiKey, decrypted_secretKey
-
 
 def getAccountValue():
     API_KEY, SECRET_KEY = getAccountInfo()
@@ -229,13 +237,12 @@ def getChartData():
 
     return timestamps , equities
 
-
 def update_keys(api_key, secret_key, paydate):
     if api_key == "" and secret_key == "" and paydate == "":
         return False
     
     try:
-    # API and SECRET togethet
+    # API and SECRET together
         if api_key != "" and secret_key != "":
             try:
                 conn = sqlite3.connect(db_path)
@@ -260,11 +267,9 @@ def update_keys(api_key, secret_key, paydate):
 
                     conn.commit()
                     conn.close()
-
+                    print("Keys updated successfully")
                     log = "Keys updated successfully."
                     createLog(log)
-
-                return True
 
             except Exception as e:
                 log = "Exception occured updating keys: " + e
@@ -301,11 +306,29 @@ def update_keys(api_key, secret_key, paydate):
 
     except:
         return False
-    
-def initial_setup(api, secret, payday, initial_stock):
 
+    return True    
+
+def initial_setup(api, secret, payday, initial_stock):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+
+    # Check if the user already exists
+    try:
+        cursor.execute("SELECT id FROM user WHERE id = 1")
+        existing_user = cursor.fetchone()
+        if existing_user:
+            print("User already exists. Using 'update_keys' to update information.")
+            
+            conn.close()
+            
+            update_keys(api, secret, payday)
+
+            return True
+    except sqlite3.OperationalError:
+        # If the table doesn't exist, we can proceed with the initial setup
+        print("No user found, proceeding with initial setup.")
+
     try: 
         if api == "" or secret == "" or payday == "":
             return False
@@ -333,4 +356,8 @@ def initial_setup(api, secret, payday, initial_stock):
     except Exception as e:
         print("Unsuccessful initial setup: " + e)
         return False
-    
+
+# Ensure the directory exists
+if not os.path.exists(db_path):
+    createDBFile(db_path)
+

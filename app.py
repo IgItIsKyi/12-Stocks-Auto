@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
-from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile
+from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath
 from datetime import datetime
 import os
 import sys
@@ -17,9 +17,14 @@ try:
     bcknd_script_pid = getProcessId()
     
 except:
+    db_path = getDbPath()
+    if not os.path.exists(db_path):
+        createDBFile(db_path)
+        print("Database file created at:", db_path)
     firstRun = True
+    timestamps = []
+    equities = []
     bcknd_script_pid = 0
-    createDBFile()
     buildTables()
     running = False
 
@@ -148,7 +153,6 @@ def chart_data():
             "labels": ["No Data"],
             "values": [0]
         })
-        ...
 
 
 if __name__ == "__main__":
