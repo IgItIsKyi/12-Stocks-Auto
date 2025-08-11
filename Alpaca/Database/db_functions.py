@@ -7,11 +7,28 @@ from dateutil.relativedelta import relativedelta
 from pathlib import Path
 import os
 import platform
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def get_env_var():
+    try:
+        testing = os.getenv('TESTING')
+    except TypeError:
+        pass
+
+def get_base_url(testing=None):
+    if testing is None:
+        testing = os.getenv('TESTING')
+
+    if testing:
+        return 'https://paper-api.alpaca.markets'
+    else:
+        return 'https://api.alpaca.markets'
 
 
 db_file = "12Auto.db"
-BASE_URL = 'https://paper-api.alpaca.markets'
-
+BASE_URL = get_base_url(get_env_var())
 
 def getDbPath():
     if platform.system() == "Windows":

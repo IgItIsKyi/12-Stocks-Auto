@@ -3,16 +3,22 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 from alpaca_trade_api.rest import REST
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from Alpaca.Database.db_functions import getDbPath, get_base_url, get_env_var
 
-BASE_URL = 'https://paper-api.alpaca.markets'  # Needed for Alpaca Account
-   # Keep program running
 
 
+
+
+
+BASE_URL = get_base_url(get_env_var())  # Needed for Alpaca Account
+
+db_path = getDbPath()
 # SQL Connection
-conn = sqlite3.connect(r".\Alpaca\Database\\12Auto.db")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
-
-
 
 # Calculate and update next run date
 def getNextRunDate(old_date):
