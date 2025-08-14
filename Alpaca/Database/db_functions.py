@@ -9,8 +9,12 @@ import os
 import platform
 from dotenv import load_dotenv
 
-load_dotenv()
-
+try:
+    # In test enviornment
+    load_dotenv()
+except:
+    # not in test enviornment
+    pass
 def get_env_var():
     try:
         testing = os.getenv('TESTING')

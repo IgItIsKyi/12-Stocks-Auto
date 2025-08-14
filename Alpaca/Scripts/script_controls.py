@@ -11,20 +11,35 @@ sys.path.insert(0, alpaca_dir)
 
 from Database.db_functions import updateProcessId, getProcessId
 
-def checkScriptRunning(target_pid):
 
-    try:
-        process = psutil.Process(int(target_pid))
-        if process.name() == "pythonw.exe" or process.name() == "python.exe":
-            print("Script running at " + target_pid)
-            return True
-        else:
-            print("no script found.")
+def checkScriptRunning(target_pid):
+    device_platform = get_platform()
+    if device_platform == "Windows":
+        try:
+            process = psutil.Process(int(target_pid))
+            if process.name() == "pythonw.exe" or process.name() == "python.exe":
+                print("Script running at " + target_pid)
+                return True
+            else:
+                print("no script found.")
+                return False
+        except:
+            print('Script not running')
+            updateProcessId("0")
             return False
-    except:
-        print('Script not running')
-        updateProcessId("0")
-        return False
+    else:
+        try:
+            process = psutil.Process(int(target_pid))
+            if process.name() == "python3":
+                print("Script running at " + target_pid)
+                return True
+            else:
+                print("no script found.")
+                return False
+        except:
+            print('Script not running')
+            updateProcessId("0")
+            return False      
     
 def stopScript(target_pid):
     target_pid = int(target_pid)
@@ -62,16 +77,20 @@ def runScript():
         platform = get_platform()
 
         current_working_dir = os.getcwd()
+
         bcknd_script =  r".\Alpaca\Scripts\alpaca_trading.py"
 
 
 
         if platform == "Windows":
+            bcknd_script =  r".\Alpaca\Scripts\alpaca_trading.py"
+
             process = subprocess.Popen(["pythonw", bcknd_script])
             updateProcessId(process.pid)
             print(f"Run script at PID: {process.pid}")
             return process.pid
         else:
+            bcknd_script = r"Alpaca/Scripts/alpaca_trading.py"
             process = subprocess.Popen(["python3", bcknd_script, "&"])
             updateProcessId(process.pid)
             print(process.pid)
