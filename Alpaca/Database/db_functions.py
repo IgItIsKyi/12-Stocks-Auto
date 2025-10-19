@@ -26,8 +26,10 @@ def get_base_url(testing=None):
         testing = os.getenv('TESTING')
 
     if testing:
+        print("Development API")
         return 'https://paper-api.alpaca.markets'
     else:
+        print("Production API")
         return 'https://api.alpaca.markets'
 
 
@@ -49,6 +51,8 @@ def getDbPath():
     return database_path
 
 db_path = getDbPath()
+
+print(db_path)
 
 def createDBFile(database_path):
     # Create the database file if it doesn't exist
@@ -132,8 +136,6 @@ def getLogs():
     for log in logs:
         log_info.append(log[0])
         log_date.append(log[1])
-
-        print(f"Log: {log[0]} Timestamp: {log[1]}")
 
         
     return log_info, log_date
@@ -227,8 +229,11 @@ def getLastOrderedStock():
     API_KEY, SECRET_KEY = getAccountInfo()
     api = REST(API_KEY, SECRET_KEY, BASE_URL)
 
-    account = api.get_activities(page_size=1)
-    last_stock = account[0].symbol
+    try:  # If there is a stock that was ordered before    
+        account = api.get_activities(page_size=1)
+        last_stock = account[0].symbol
+    except:
+        last_stock = "N/A"
 
     return last_stock
 
