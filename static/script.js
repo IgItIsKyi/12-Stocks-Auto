@@ -8,9 +8,14 @@ fetch('/api/chart-data')
     let highestValue = 0
     let bcolor = "green"
 
+    let lowestValue = data.values[0]
+
     data.values.forEach(element => {
         if(element >= highestValue){
             highestValue = element
+        }
+        if(element <= lowestValue){
+            lowestValue = element
         }
     });
 
@@ -41,6 +46,7 @@ fetch('/api/chart-data')
                         maxTicksLimits: 5,
                         max: highestValue + (highestValue * 0.2),
                         stepSize: (highestValue / 3),
+                        min: lowestValue - (lowestValue * 0.2),
                         display: true
                     }
                 }
@@ -66,6 +72,12 @@ fetch('/api/chart-data')
         document.getElementById('stock').textContent = data.stock;
         document.getElementById('accountValue').textContent = data.accountValue;
         document.getElementById('purchaseDate').textContent = " " + data.purchaseDate;
+        console.log("Length of logs: " + data.logs[0].length)
+        for(let i = 0; i < data.logs[0].length; i++) {
+            text ='<tr><th scope="row">' + (i+1) + '</th><td>' + data.logs[0][i]+ '</td><td>' + data.logs[1][i]+ '</td></tr>'
+            document.getElementById('logInfo').innerHTML = document.getElementById('logInfo').innerHTML + text
+        }
+
       });
   }
 
@@ -91,10 +103,12 @@ function running(value) {
 
 function togglePiView() {
     const PiView = document.getElementById("PiViewElement");
+    const PiView2 = document.getElementById("PiViewElement2");
     const WebView = document.getElementById("WebViewElement");
     const welcome = document.getElementById("welcomeHdr");
 
     PiView.style.display = (PiView.style.display === "none") ? "block" : "none";
+    PiView2.style.display = (PiView2.style.display === "none") ? "block" : "none";
 
     if(WebView.getAttribute("hidden") !== null){
         WebView.removeAttribute("hidden");

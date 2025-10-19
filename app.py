@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
-from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath
+from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
 from datetime import datetime
 import os
 import sys
@@ -59,7 +59,8 @@ def status():
             "stock": getLastOrderedStock(),
             "accountValue": getAccountValue(),
             "purchaseDate": nextPurchaseDate(),
-            "firstRun": checkFirstRun()
+            "firstRun": checkFirstRun(),
+            "logs": getLogs()
         })
     except:
         return jsonify({

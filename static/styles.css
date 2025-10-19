@@ -26,3 +26,8 @@
 .no-underline {
   text-decoration: none;
 }
+
+    .table-scroll-container {
+        max-height: 300px; /* Set a maximum height for the scrollable area */
+        overflow-y: auto;  /* Enable vertical scrolling when content exceeds max-height */
+    }
