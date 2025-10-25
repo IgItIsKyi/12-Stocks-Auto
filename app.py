@@ -12,6 +12,7 @@ app = Flask(__name__,
 
 try: 
     firstRun = checkFirstRun()
+    startup = True
     timestamps, equities = getChartData()
     running = checkScriptRunning(getProcessId())
     bcknd_script_pid = getProcessId()
@@ -60,7 +61,29 @@ def status():
             "accountValue": getAccountValue(),
             "purchaseDate": nextPurchaseDate(),
             "firstRun": checkFirstRun(),
-            "logs": getLogs()
+        })
+    except:
+        return jsonify({
+            "running": running
+        })
+    
+@app.route('/api/logTable')
+def logTable():
+    global running
+    global startup
+  
+    if startup == True:
+        initialRun = True
+        startup = False
+    else:
+        initialRun = False
+
+    try:
+        return jsonify({
+            "running": running,
+            "logs": getLogs(),
+            "initialRun": initialRun
+
         })
     except:
         return jsonify({
@@ -157,4 +180,4 @@ def chart_data():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=49000)
+    app.run(host="0.0.0.0", port=49000, debug=False)

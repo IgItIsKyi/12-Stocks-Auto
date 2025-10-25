@@ -124,21 +124,24 @@ def getLogs():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    log_id = []
     log_info = []
     log_date = []
     # Get all log information from SQL Table
-    cursor.execute("SELECT info, date FROM logs")
+    cursor.execute("SELECT id, info, date FROM logs")
     logs = cursor.fetchall()
 
 
     conn.close()
 
     for log in logs:
-        log_info.append(log[0])
-        log_date.append(log[1])
+
+        log_id.append(log[0])
+        log_info.append(log[1])
+        log_date.append(log[2])
 
         
-    return log_info, log_date
+    return log_id, log_info, log_date
 
 
 def createLog(log):
@@ -386,4 +389,3 @@ def initial_setup(api, secret, payday, initial_stock):
 # Ensure the directory exists
 if not os.path.exists(db_path):
     createDBFile(db_path)
-

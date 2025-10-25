@@ -72,33 +72,89 @@ fetch('/api/chart-data')
         document.getElementById('stock').textContent = data.stock;
         document.getElementById('accountValue').textContent = data.accountValue;
         document.getElementById('purchaseDate').textContent = " " + data.purchaseDate;
-        console.log("Length of logs: " + data.logs[0].length)
-        for(let i = 0; i < data.logs[0].length; i++) {
-            text ='<tr><th scope="row">' + (i+1) + '</th><td>' + data.logs[0][i]+ '</td><td>' + data.logs[1][i]+ '</td></tr>'
-            document.getElementById('logInfo').innerHTML = document.getElementById('logInfo').innerHTML + text
-        }
+
+
+
 
       });
   }
 
-  // Run once on page load and every 60 seconds
-  generalInfo();
-  setInterval(generalInfo, 30000);
+  function tableInfo(forceInitial = false) {
+    fetch(`/api/logTable${forceInitial ? '?forceInitial=true' : ''}`)
+      .then(response => response.json())
+      .then(data => {
+        var lastID  // Figure out what was the last ID used in the initial page load
+        console.log("IntRun var: "+ data.initialRun)
+
+        const logBody = document.getElementById('logInfo');
+        if (!logBody) return;
+
+        // Clear table if this is an initial run
+
+      // Clear table if this is an initial run
+      if (data.initialRun === true) {
+        logBody.innerHTML = '';
+        console.log("Initial run: rebuilding full log table");
+
+        // Rebuild the full table
+        const [ids, timestamps, messages] = data.logs;
+        for (let i = 0; i < ids.length; i++) {
+          const row = `
+            <tr>
+              <th scope="row">${ids[i]}</th>
+              <td>${timestamps[i]}</td>
+              <td>${messages[i]}</td>
+            </tr>`;
+          logBody.insertAdjacentHTML('beforeend', row);
+        }
+
+        // Keep track of last ID if needed for later updates
+        window.lastID = ids[ids.length - 1];
+
+      } else {
+        console.log("Update run: appending new logs if any");
+
+        // Append only new rows if any exist
+        const [ids, timestamps, messages] = data.logs;
+        if (typeof window.lastID === 'undefined') {
+          window.lastID = 0;
+        }
+
+        for (let i = 0; i < ids.length; i++) {
+          if (ids[i] > window.lastID) {
+            const row = `
+              <tr>
+                <th scope="row">${ids[i]}</th>
+                <td>${timestamps[i]}</td>
+                <td>${messages[i]}</td>
+              </tr>`;
+            logBody.insertAdjacentHTML('beforeend', row);
+            window.lastID = ids[i];
+          }
+        }
+      }
+    })
+
+    .catch(err => console.error("Error loading log table:", err));
+
+
+    }
 
 function running(value) {
-    fetch('/toggle-running', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ running: value === 'True' })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload(); // Reload page to reflect the new state
-        }
-    });
+  fetch('/toggle-running', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ running: value === 'True' })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.success) {
+          // Force an initial log reload after refresh
+          sessionStorage.setItem('forceInitialLogs', 'true');
+          location.reload();
+      }
+  })
+  .catch(err => console.error("Error toggling running state:", err));
 }
 
 function togglePiView() {
@@ -220,3 +276,14 @@ function initialInfo() {
         }
     });
 }
+
+
+window.addEventListener('load', () => {
+  const forceInitial = sessionStorage.getItem('forceInitialLogs') === 'true';
+  tableInfo(forceInitial);
+  sessionStorage.removeItem('forceInitialLogs'); // clean it up
+
+  generalInfo();
+  setInterval(generalInfo, 30000);
+  setInterval(() => tableInfo(false), 30000); // only fetch updates every 30s
+});
