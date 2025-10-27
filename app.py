@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, jsonify
-from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
+from Alpaca.Scripts.alpaca_trading import start_trading, stop_trading
+# from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
 from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
 from datetime import datetime
+from threading import Thread
 import os
 import sys
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -14,8 +16,9 @@ try:
     firstRun = checkFirstRun()
     startup = True
     timestamps, equities = getChartData()
-    running = checkScriptRunning(getProcessId())
-    bcknd_script_pid = getProcessId()
+    running = False
+    trading_thread = None
+    # bcknd_script_pid = getProcessId()
     
 except:
     db_path = getDbPath()
@@ -25,23 +28,21 @@ except:
     firstRun = True
     timestamps = []
     equities = []
-    bcknd_script_pid = 0
+    trading_thread = None
+    # bcknd_script_pid = 0
     buildTables()
     running = False
 
 
 @app.route("/")
 def index():
-    global bcknd_script_pid, timestamps, equities
+    global timestamps, equities, running
     try: 
         timestamps, equities = getChartData()
-        running = checkScriptRunning(getProcessId())
-        bcknd_script_pid = getProcessId()
+        # bcknd_script_pid = getProcessId()
         firstRun = checkFirstRun()
     except:
-        firstRun = True
-        bcknd_script_pid = getProcessId()
-        buildTables()
+        firstRun = True 
         running = False
 
     return render_template(
@@ -92,33 +93,34 @@ def logTable():
 
 @app.route('/toggle-running', methods=['POST'])
 def toggle_running():
-    global running, bcknd_script_pid
+    global running, trading_thread
 
     data = request.get_json()
     running = data.get('running', False)
 
     if running == True:
         try:
-            currentState = checkScriptRunning(bcknd_script_pid)
-            if currentState == False:
-                bcknd_script_pid = runScript()
-                
-                log = "Script successfully started running."
-                createLog(log)
+            if trading_thread is None or not trading_thread.is_alive():
+                trading_thread = Thread(target=start_trading, daemon=True)
+                trading_thread.start()
+                log = "Trading started."
+            else:
+                log = "Trading already running."
 
         except Exception as e:
             log = "Script did not successfully start running: " + e
-            createLog(log)
 
     else:
         try:
-            stopScript(bcknd_script_pid)
-            log = "Script successfully stopped running PID " + bcknd_script_pid
-            createLog(log)
+            stop_trading()
+            log = "Script successfully stopped running."
+
+
         except:
             log = "script did not successfully stop running."
-            createLog(log)
-
+            
+    
+    createLog(log)
     return jsonify(success=True, running=running)
 
 @app.route('/update-info', methods=['POST'])

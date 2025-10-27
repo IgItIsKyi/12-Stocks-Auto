@@ -21,6 +21,9 @@ def get_env_var():
     except TypeError:
         pass
 
+
+
+
 def get_base_url(testing=None):
     if testing is None:
         testing = os.getenv('TESTING')
@@ -52,8 +55,6 @@ def getDbPath():
 
 db_path = getDbPath()
 
-print(db_path)
-
 def createDBFile(database_path):
     # Create the database file if it doesn't exist
     if not os.path.exists(database_path):
@@ -84,10 +85,11 @@ def buildTables():
         secret BLOB,
         key BLOB,
         pay_date TEXT,
-        cur_stock TEXT, 
-        process_pid TEXT
+        cur_stock TEXT 
     )
-    """)
+    """) # process_pid TEXT
+
+
 
         # Create "logs" Table
     cursor.execute("""
@@ -150,7 +152,6 @@ def createLog(log):
 
     timestamp = datetime.now().strftime("%H:%M %m/%d/%Y ")
     cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (log, timestamp))
-    print(f"Log: {log} \nTimestamp: {timestamp}")
 
     conn.commit()
     conn.close()
@@ -368,10 +369,8 @@ def initial_setup(api, secret, payday, initial_stock):
             stock = cursor.fetchone()[0]
         except:
             stock = 1
-        print(f"Stock number: {stock}")
 
         key = Fernet.generate_key()
-        print(f"Key: {key}")
         cipher = Fernet(key)
 
         encrypted_api_key = cipher.encrypt(api.encode())

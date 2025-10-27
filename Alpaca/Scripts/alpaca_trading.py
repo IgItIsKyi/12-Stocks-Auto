@@ -5,21 +5,38 @@ from datetime import datetime, timedelta
 from alpaca_trade_api.rest import REST
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from Alpaca.Database.db_functions import getDbPath, get_base_url, get_env_var
 
+def setup_paths():
+    """
+    Sets up sys.path so that the Database and Scripts folders
+    are accessible both in development and in PyInstaller .exe.
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as PyInstaller executable
+        base_path = sys._MEIPASS
+    else:
+        # Running in development (from source)
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+    # Make sure the base path is first in sys.path
+    if base_path not in sys.path:
+        sys.path.insert(0, base_path)
 
+    # Optional: debug print
+    # print("Base path for imports:", base_path)
+    # print("sys.path:", sys.path)
 
-
+# Call the setup function
+setup_paths()
+    
+from Database.db_functions import getDbPath, get_base_url, get_env_var
 
 BASE_URL = get_base_url(get_env_var())  # Needed for Alpaca Account
-
 db_path = getDbPath()
 # SQL Connection
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
-
+running = False
 # Calculate and update next run date
 def getNextRunDate(old_date):
 
@@ -93,29 +110,52 @@ def submitAlpacaOrder():
             time.sleep(86400)  # Seconds converted to a day
 
 # Script Starts here #
-API_KEY, SECRET_KEY = getAccountInfo()
-api = REST(API_KEY, SECRET_KEY, BASE_URL)
+try:
+    API_KEY, SECRET_KEY = getAccountInfo()
+    api = REST(API_KEY, SECRET_KEY, BASE_URL)
+except:
+    pass
+
+def start_trading():
+
+    global running
+    if running == False:
+        running = True
 
 
-while(True):
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    cursor = conn.cursor()
 
-    cursor.execute("SELECT pay_date FROM user WHERE id = 1")
-    paydate = cursor.fetchone()[0]
+    while running:
+        print("Running trading logic...")
 
-    current_day = datetime.now()
-    paydate = datetime.strptime(paydate, "%m/%d/%Y")
+        try:
+            cursor.execute("SELECT pay_date FROM user WHERE id = 1")
+            paydate = cursor.fetchone()[0]
 
-    print(current_day >= paydate)
+            current_day = datetime.now()
+            paydate = datetime.strptime(paydate, "%m/%d/%Y")
 
 
-    if current_day >= paydate:
+            if current_day >= paydate:
 
-        print("It's payday!")
-        getNextRunDate(paydate)
-        submitAlpacaOrder()
-    else:
-        print("Not payday... Sorry")
-        time.sleep(82800)
+                print("It's payday!")
+                getNextRunDate(paydate)
+                submitAlpacaOrder()
+            else:
+                print("Not payday... Sorry")
+                time.sleep(82800)
+        except Exception as e:
+            print("Error trying to run trading logic: ", e)
+            break
 
+        conn.close()
+
+
+def stop_trading():
+    global running
+    if running == True:
+        running = False
+    print("Stopping trading logic when time expires on while loop")
 
 conn.close()

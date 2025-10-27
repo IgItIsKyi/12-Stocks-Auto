@@ -5,7 +5,12 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('templates', 'templates'), ('static', 'static')],
+    datas=[
+        ('templates', 'templates'),
+        ('static', 'static'),
+        ('Alpaca/Scripts', 'Scripts'),
+        ('Alpaca/Database', 'Database')
+           ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
