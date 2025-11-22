@@ -30,16 +30,16 @@ def setup_paths():
 setup_paths()
     
 from Database.db_functions import getDbPath, get_base_url, get_env_var
-
 BASE_URL = get_base_url(get_env_var())  # Needed for Alpaca Account
 db_path = getDbPath()
-# SQL Connection
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
+
+
 running = False
 # Calculate and update next run date
 def getNextRunDate(old_date):
 
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
     testing = False
 
     if testing == False:
@@ -56,20 +56,28 @@ def getNextRunDate(old_date):
         
         next_run_date = next_run_date.strftime("%m/%d/%Y")
 
+    conn.close()
+
 # Retrieve and decrypt data
 def getAccountInfo():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
     cursor.execute("SELECT key FROM user WHERE id = 1")
     key = cursor.fetchone()
     cipher = Fernet(key[0])
 
     cursor.execute("SELECT api_key, secret FROM user WHERE id = 1")
     encrypted_row = cursor.fetchone()
+    conn.close()
     decrypted_apiKey = cipher.decrypt(encrypted_row[0]).decode()
     decrypted_secretKey = cipher.decrypt(encrypted_row[1]).decode()
 
     return decrypted_apiKey, decrypted_secretKey
 
 def submitAlpacaOrder():
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
     # Figure out what stock id the user has
     cursor.execute("SELECT cur_stock FROM user WHERE id = 1")
     stock_id = cursor.fetchone()[0]
@@ -79,6 +87,7 @@ def submitAlpacaOrder():
     stock = cursor.fetchone()[0]
     order = False
 
+    conn.close()
 
     while( order != True ):
         try:
@@ -87,6 +96,11 @@ def submitAlpacaOrder():
 
             note = "Submitted order successfully for " + stock
             date = datetime.now().strftime("%m/%d/%Y")
+
+
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
             cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (note, date))
             order = True
 
@@ -101,13 +115,16 @@ def submitAlpacaOrder():
                 
             cursor.execute("UPDATE user SET cur_stock = ? WHERE id = 1", (next_stock,))
             conn.commit()
-
+            conn.close()
         except Exception as e:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
             date = datetime.now().strftime("%m/%d/%Y")
-            note = "Unable to submit order. Trying again in 24 hours. Exception: " + e
+            note = "Unable to submit order. Trying again in 1 hour. Exception: " + str(e)
             cursor.execute("INSERT INTO logs (info, date) VALUES (?,?)", (note, date))
             conn.commit()
-            time.sleep(86400)  # Seconds converted to a day
+            conn.close()
+            time.sleep(3600)  # Seconds converted to an hour
 
 # Script Starts here #
 try:
@@ -132,30 +149,33 @@ def start_trading():
         try:
             cursor.execute("SELECT pay_date FROM user WHERE id = 1")
             paydate = cursor.fetchone()[0]
-
+            conn.close()
             current_day = datetime.now()
             paydate = datetime.strptime(paydate, "%m/%d/%Y")
+            try:
+                if current_day >= paydate:
 
-
-            if current_day >= paydate:
-
-                print("It's payday!")
-                getNextRunDate(paydate)
-                submitAlpacaOrder()
-            else:
-                print("Not payday... Sorry")
-                time.sleep(82800)
+                    print("It's payday!")
+                    try:
+                        getNextRunDate(paydate)
+                    except Exception as e:
+                        print("Error with SQL (NextRunDate): " + str(e))
+                    
+                    try:
+                        submitAlpacaOrder()
+                    except Exception as e:
+                        print("Error with order submitting: " + str(e))
+                else:
+                    print("Not payday... Sorry")
+                    time.sleep(3600) # Waits an hour
+            except Exception as e:
+                print("Something wrong with the if statement...")
         except Exception as e:
-            print("Error trying to run trading logic: ", e)
+            print("Error trying to run trading logic: ", str(e))
             break
-
-        conn.close()
-
 
 def stop_trading():
     global running
     if running == True:
         running = False
     print("Stopping trading logic when time expires on while loop")
-
-conn.close()
