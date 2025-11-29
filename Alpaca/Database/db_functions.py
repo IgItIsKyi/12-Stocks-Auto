@@ -113,7 +113,7 @@ def buildTables():
         """)
 
         # Add all stocks to the table (each stock gives a dividend at some point)
-    stocks = ['BDCX', 'NHPAP', 'CWPS', 'TWO', 'ABR', 'AB', 'ARLP', 'HTGC', 'SPQ', 'WHF', 'TRIN', 'CION']
+    stocks = ['BDCX', 'NHPAP', 'PFLT', 'TWO', 'ABR', 'AB', 'ARLP', 'HTGC', 'SPQ', 'WHF', 'TRIN', 'CION']
     for stock in stocks: 
         cursor.execute("INSERT INTO stocks (stock_sym) VALUES (?)", (stock,))
 

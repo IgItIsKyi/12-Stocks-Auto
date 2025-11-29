@@ -141,20 +141,24 @@ fetch('/api/chart-data')
     }
 
 function running(value) {
+  console.log("Button value: ", value)
   fetch('/toggle-running', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ running: value === 'True' })
+      body: JSON.stringify({ running: value })
   })
   .then(response => response.json())
   .then(data => {
       if (data.success) {
+        console.log("New state: ", data.is_running)
           // Force an initial log reload after refresh
           sessionStorage.setItem('forceInitialLogs', 'true');
           location.reload();
       }
   })
   .catch(err => console.error("Error toggling running state:", err));
+
+
 }
 
 function togglePiView() {
@@ -193,44 +197,44 @@ function toggleAxisTicks() {
 }
 
 function updateInfo() {
-    const API_KEY = document.getElementById('u-api-key').value.trim();
-    const SECRET_KEY = document.getElementById('u-secret-key').value.trim();
-    const PAY_DATE = document.getElementById('u-pay-date').value.trim();
+  const API_KEY = document.getElementById('u-api-key').value.trim();
+  const SECRET_KEY = document.getElementById('u-secret-key').value.trim();
+  const PAY_DATE = document.getElementById('u-pay-date').value.trim();
 
-    fetch('/update-info', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-            API_KEY: API_KEY,
-            SECRET_KEY: SECRET_KEY,
-            PAY_DATE: PAY_DATE
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success == false) {
-            const modalMsg = document.getElementById('modalErrorMsg2');
+  fetch('/update-info', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+          API_KEY: API_KEY,
+          SECRET_KEY: SECRET_KEY,
+          PAY_DATE: PAY_DATE
+      })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.success == false) {
+          const modalMsg = document.getElementById('modalErrorMsg2');
 
-              if (modalMsg.hidden) {
-                    modalMsg.hidden = !modalMsg.hidden;
-                }
+            if (modalMsg.hidden) {
+                  modalMsg.hidden = !modalMsg.hidden;
+              }
 
-        } else {
-            const modalMsg = document.getElementById('modalSuccessMsg2');
+      } else {
+          const modalMsg = document.getElementById('modalSuccessMsg2');
 
-              if (modalMsg.hidden) {
-                    modalMsg.hidden = !modalMsg.hidden;
-                }
+            if (modalMsg.hidden) {
+                  modalMsg.hidden = !modalMsg.hidden;
+              }
 
-                setTimeout(function () {
-                    location.reload();
-                }, 1500);
-  
-            
-        }
-    });
+              setTimeout(function () {
+                  location.reload();
+              }, 1500);
+
+          
+      }
+  });
 }
 
 function initialInfo() {

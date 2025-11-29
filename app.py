@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, jsonify
-from Alpaca.Scripts.alpaca_trading import start_trading, stop_trading
-# from Alpaca.Scripts.script_controls import runScript, stopScript, checkScriptRunning
+from Alpaca.Scripts.alpaca_trading import start_service, stop_service
 from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
 from datetime import datetime
-from threading import Thread
 import os
 import sys
+
+
 base_path = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__,
@@ -16,9 +16,7 @@ try:
     firstRun = checkFirstRun()
     startup = True
     timestamps, equities = getChartData()
-    running = False
     trading_thread = None
-    # bcknd_script_pid = getProcessId()
     
 except:
     db_path = getDbPath()
@@ -31,33 +29,32 @@ except:
     trading_thread = None
     # bcknd_script_pid = 0
     buildTables()
-    running = False
 
 
 @app.route("/")
 def index():
-    global timestamps, equities, running
+    global timestamps, equities
     try: 
         timestamps, equities = getChartData()
-        # bcknd_script_pid = getProcessId()
         firstRun = checkFirstRun()
     except:
-        firstRun = True 
-        running = False
+        firstRun = True
 
+    from Alpaca.Scripts.alpaca_trading import is_running
+    print("running:", is_running)
     return render_template(
         "index.html",
-        running = running,
+         is_running = is_running,
         firstRun = firstRun
     )
 
 @app.route('/api/status')
 def status():
-    global running
+    from Alpaca.Scripts.alpaca_trading import is_running
 
     try:
         return jsonify({
-            "running": running,
+            "running": is_running,
             "stock": getLastOrderedStock(),
             "accountValue": getAccountValue(),
             "purchaseDate": nextPurchaseDate(),
@@ -72,6 +69,9 @@ def status():
 def logTable():
     global running
     global startup
+
+
+    from Alpaca.Scripts.alpaca_trading import is_running
   
     if startup == True:
         initialRun = True
@@ -81,47 +81,33 @@ def logTable():
 
     try:
         return jsonify({
-            "running": running,
+            "running": is_running,
             "logs": getLogs(),
             "initialRun": initialRun
 
         })
     except:
         return jsonify({
-            "running": running
+            "running": is_running
         })
 
 @app.route('/toggle-running', methods=['POST'])
 def toggle_running():
-    global running, trading_thread
-
     data = request.get_json()
-    running = data.get('running', False)
+    should_run = data.get('running', False)
 
-    if running == True:
-        try:
-            if trading_thread is None or not trading_thread.is_alive():
-                trading_thread = Thread(target=start_trading, daemon=True)
-                trading_thread.start()
-                log = "Trading started."
-            else:
-                log = "Trading already running."
+    print("Received JSON:", data)
 
-        except Exception as e:
-            log = "Script did not successfully start running: " + e
 
+    if should_run:
+        started = start_service()
+        log = "Trading started" if started else "Trading already running"
+        createLog(log)
     else:
-        try:
-            stop_trading()
-            log = "Script successfully stopped running."
+        stop_service()
 
-
-        except:
-            log = "script did not successfully stop running."
-            
-    
-    createLog(log)
-    return jsonify(success=True, running=running)
+    from Alpaca.Scripts.alpaca_trading import is_running
+    return jsonify({"success": True,"is_running": is_running})
 
 @app.route('/update-info', methods=['POST'])
 def update_info():

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from alpaca_trade_api.rest import REST
 import os
 import sys
+from threading import Thread, Event
 
 def setup_paths():
     """
@@ -32,9 +33,12 @@ setup_paths()
 from Database.db_functions import getDbPath, get_base_url, get_env_var
 BASE_URL = get_base_url(get_env_var())  # Needed for Alpaca Account
 db_path = getDbPath()
+stop_event = Event()
+trading_thread = None
 
 
 running = False
+is_running = False
 # Calculate and update next run date
 def getNextRunDate(old_date):
 
@@ -135,15 +139,15 @@ except:
 
 def start_trading():
 
-    global running
-    if running == False:
-        running = True
+    global is_running
+    if is_running == False:
+        is_running = True
 
 
     conn = sqlite3.connect(db_path, check_same_thread=False)
     cursor = conn.cursor()
 
-    while running:
+    while is_running:
         print("Running trading logic...")
 
         try:
@@ -152,30 +156,42 @@ def start_trading():
             conn.close()
             current_day = datetime.now()
             paydate = datetime.strptime(paydate, "%m/%d/%Y")
-            try:
-                if current_day >= paydate:
 
-                    print("It's payday!")
-                    try:
-                        getNextRunDate(paydate)
-                    except Exception as e:
-                        print("Error with SQL (NextRunDate): " + str(e))
-                    
-                    try:
-                        submitAlpacaOrder()
-                    except Exception as e:
-                        print("Error with order submitting: " + str(e))
-                else:
-                    print("Not payday... Sorry")
-                    time.sleep(3600) # Waits an hour
-            except Exception as e:
-                print("Something wrong with the if statement...")
+            if not paydate:
+                print("No pay date found.")
+                stop_event.wait(10)
+                continue
+
+            if current_day >= paydate:
+                print("It's payday!")
+                getNextRunDate(paydate)
+                submitAlpacaOrder()
+                stop_event.wait(10)
+
+            else:
+                print("Not payday... Waiting 1 hour")
+                time.sleep(3600) # Waits an hour
         except Exception as e:
-            print("Error trying to run trading logic: ", str(e))
-            break
+            print("Error in trading logic: ", e)
+            stop_event.wait(5)
 
-def stop_trading():
-    global running
-    if running == True:
-        running = False
-    print("Stopping trading logic when time expires on while loop")
+def start_service():
+    global is_running, trading_thread
+
+    if not is_running:
+        stop_event.clear()
+        trading_thread = Thread(target=start_trading, daemon=True)
+        trading_thread.start()
+        is_running = True
+
+    return is_running
+
+def stop_service():
+    global is_running
+
+
+    stop_event.set()
+    is_running = False
+    return True
+
+

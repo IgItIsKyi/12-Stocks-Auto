@@ -58,16 +58,16 @@
             <div class="col">
                 <h4 class="text-white-50" style="margin-top: 20px;">Status</h4>
                 <div class="status text-white-50">
-                    {% if running == True %}
+                    {% if is_running == True %}
                     <div class="d-flex flex-row align-items-center m-2">
                         <span class="dot running align-self-center"></span> Running
                     </div>
-                    <button id="auto-script" class="btn btn-danger" value="False" onclick="running(value)">Stop</button>
+                    <button id="auto-script" class="btn btn-danger" value="False" onclick="running(false)">Stop</button>
                     {% else %}
                     <div class="d-flex flex-row align-items-center m-2">
-                        <span class="dot not-running"></span> Not Running            
+                        <span class="dot not-running"></span> Not Running
                     </div>
-                    <button id="auto-script" class="btn btn-success" value="True" onclick="running(value)">Start</button> 
+                    <button id="auto-script" class="btn btn-success" value="True" onclick="running(true)">Start</button> 
                     {% endif %}
                 </div>
             </div>
