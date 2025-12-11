@@ -62,6 +62,20 @@ def getNextRunDate(old_date):
 
     conn.close()
 
+def getPayDate():
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT pay_date FROM user WHERE id = 1")
+    paydate = cursor.fetchone()[0]
+    conn.close()
+    paydate = datetime.strptime(paydate, "%m/%d/%Y")
+
+    print("Pay date: " + str(paydate))
+    
+    return paydate
+
 # Retrieve and decrypt data
 def getAccountInfo():
     conn = sqlite3.connect(db_path)
@@ -120,6 +134,8 @@ def submitAlpacaOrder():
             cursor.execute("UPDATE user SET cur_stock = ? WHERE id = 1", (next_stock,))
             conn.commit()
             conn.close()
+            getNextRunDate(getPayDate())
+
         except Exception as e:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -164,7 +180,6 @@ def start_trading():
 
             if current_day >= paydate:
                 print("It's payday!")
-                getNextRunDate(paydate)
                 submitAlpacaOrder()
                 stop_event.wait(10)
 
@@ -194,4 +209,4 @@ def stop_service():
     is_running = False
     return True
 
-
+getPayDate()
