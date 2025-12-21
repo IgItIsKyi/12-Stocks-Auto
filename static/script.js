@@ -200,7 +200,9 @@ function updateInfo() {
   const API_KEY = document.getElementById('u-api-key').value.trim();
   const SECRET_KEY = document.getElementById('u-secret-key').value.trim();
   const PAY_DATE = document.getElementById('u-pay-date').value.trim();
+  const STOCK = document.getElementById('stockButton').textContent.trim();
 
+  console.log("STOCK: ", STOCK)
   fetch('/update-info', {
       method: 'POST',
       headers: {
@@ -209,7 +211,8 @@ function updateInfo() {
       body: JSON.stringify({ 
           API_KEY: API_KEY,
           SECRET_KEY: SECRET_KEY,
-          PAY_DATE: PAY_DATE
+          PAY_DATE: PAY_DATE,
+          STOCK: STOCK
       })
   })
   .then(response => response.json())

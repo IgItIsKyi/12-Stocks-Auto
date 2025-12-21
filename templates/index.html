@@ -89,6 +89,32 @@
                                     <input type="text" class="form-control bg-dark text-white-50 my-3" name="api-key" id="u-api-key" placeholder="Input api key here">
                                     <input type="text" class="form-control bg-dark text-white-50" name="secret-key" id="u-secret-key" placeholder="Input secret key here">
                                     <input type="date" class="form-control bg-dark text-white-50 my-2" name="secret-key" id="u-pay-date" placeholder="Choose next pay date here">
+                                    <button class="form-control btn-outline-secondary dropdown-toggle bg-dark text-white-50" id="stockButton" type="button" data-bs-toggle="dropdown" id="u-stock" aria-expanded="false">Stock</button>
+                                            <ul class="dropdown-menu dropdown-menu-end bg-dark text-center">
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="BDCX">BDCX</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="NHPAP">NHPAP</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="CWPS">CWPS</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="TWO">TWO</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="ABR">ABR</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="AB">AB</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="ARLP">ARLP</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="HTGC">HTGC</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="SPQ">SPQ</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="WHF">WHF</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="TRIN">TRIN</a></li>
+                                                <li><hr class="dropdown-divider bg-white"></li>
+                                                <li><a class="dropdown-stock bg-dark text-white-50 no-underline" href="#" data-value="CION">CION</a></li>
+                                            </ul>
                                     <div id="modalErrorMsg2" class="alert alert-danger mb-0" hidden>Both keys need to be filled in or the date needs to be filled!</div>
                                     <div id="modalSuccessMsg2" class="alert alert-success mb-0" hidden>Keys have updated successfully!</div>
                                     <button id="auto-script" class="btn btn-primary mt-2" onclick="updateInfo()">Send</button> 
@@ -219,6 +245,19 @@
             });
             });
         });
+
+
+        document.querySelectorAll('.dropdown-stock').forEach(item => {
+            item.addEventListener('click', function (e) {
+                e.preventDefault(); // Prevent page jump
+                const value = this.getAttribute('data-value'); // Get custom value
+                const text = this.textContent; // Get display text
+
+                // Update button text
+                document.getElementById('stockButton').textContent = text;
+            })
+        })
+
     </script>
 <!-----  End of Modal autorun  ----->
 

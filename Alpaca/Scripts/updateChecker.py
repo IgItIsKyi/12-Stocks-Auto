@@ -24,7 +24,7 @@ def check_for_update():
     except Exception as e:
         print("Exception occured: " + str(e))
 
-    return False, latest_version
+    return False, __version__
 
 def getCurrentVersion():
     return __version__

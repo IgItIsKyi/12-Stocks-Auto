@@ -267,7 +267,7 @@ def getChartData():
 
     return timestamps , equities
 
-def update_keys(api_key, secret_key, paydate):
+def update_keys(api_key, secret_key, paydate, stock):
     if api_key == "" and secret_key == "" and paydate == "":
         return False
     
@@ -332,6 +332,23 @@ def update_keys(api_key, secret_key, paydate):
 
             except Exception as e:
                 log = "Exception occured updating paydate: " + e
+                createLog(log)
+
+        if stock != "Stock":
+            try:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+
+                
+                cursor.execute("""
+                    UPDATE user
+                    SET cur_stock = ?
+                    Where id = 1
+                    """, (stock, )
+                )
+
+            except Exception as e:
+                log = "Exception occured updating stock: " + e
                 createLog(log)
 
     except:

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.alpaca_trading import start_service, stop_service
-from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
+from Alpaca.Database.db_functions import nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
 from datetime import datetime
 from Alpaca.Scripts.updateChecker import check_for_update, getCurrentVersion
 import os
@@ -123,12 +123,15 @@ def update_info():
     api_key = data.get("API_KEY")
     secret_key = data.get("SECRET_KEY")
     paydate = data.get("PAY_DATE")
+    stock = data.get("STOCK")
 
-    paydate = datetime.strptime(paydate, "%Y-%m-%d")
-    paydate = datetime.strftime(paydate, "%m/%d/%Y")
-
-    print(paydate, api_key, secret_key)
-    status = update_keys(api_key,secret_key, paydate)
+    try:
+        paydate = datetime.strptime(paydate, "%Y-%m-%d")
+        paydate = datetime.strftime(paydate, "%m/%d/%Y")
+    except:
+        ...
+    print("Paydate: " + paydate + " API_KEY: " + api_key + "SECRET: " + secret_key + "STOCK: " + stock)
+    status = update_keys(api_key,secret_key, paydate, stock)
 
     print(status)
     if status == False:
