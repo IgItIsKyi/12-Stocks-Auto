@@ -41,7 +41,7 @@ def index():
         currentVersion = getCurrentVersion()
 
     except:
-        firstRun = False
+        firstRun = True
         isUpdateNeeded = check_for_update()
         currentVersion = getCurrentVersion()
 
