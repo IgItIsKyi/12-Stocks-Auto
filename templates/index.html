@@ -174,11 +174,37 @@
 
     <!------- End of Logs Section ---------->
     <!--- Line Graph ---->
+    <!----   Modal if Update Available ----->
+    {% if isUpdateNeeded[0] %}
+    <div class="modal fade text-center" id="updateModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="updateLabel">
+        <div class="modal-dialog text-center">
+            <div class="modal-content bg-dark">
+                <div class="modal-header justify-content-center">
+                    <h5 class="modal-title text-white text-center">Update Available</h5>
+                </div>
+                <div class="modal-body text-white">
+                    <p>Would you like to update version of app? <br> Version {{ currentVersion }} -> {{ isUpdateNeeded[1] }}  </p> <!---  -->
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-success">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+<!----   End Modal if Update Available ----->
     <!--- Modal autorun on first run ---->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
         const myModal = new bootstrap.Modal(document.getElementById('firstRunModal'));
         myModal.show();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const myModal2 = new bootstrap.Modal(document.getElementById('updateModal'));
+        myModal2.show();
         });
     </script>
     <script>
@@ -195,6 +221,7 @@
         });
     </script>
 <!-----  End of Modal autorun  ----->
+
 
     <script defer src="{{ url_for('static', filename='script.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>

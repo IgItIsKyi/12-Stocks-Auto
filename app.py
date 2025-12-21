@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from Alpaca.Scripts.alpaca_trading import start_service, stop_service
 from Alpaca.Database.db_functions import getProcessId, nextPurchaseDate, getAccountValue, getLastOrderedStock, update_keys, checkFirstRun, initial_setup, getChartData, buildTables, createLog, createDBFile, getDbPath, getLogs
 from datetime import datetime
+from Alpaca.Scripts.updateChecker import check_for_update, getCurrentVersion
 import os
 import sys
 
@@ -12,7 +13,7 @@ app = Flask(__name__,
             template_folder=os.path.join(base_path, 'templates'),
             static_folder=os.path.join(base_path, 'static'))
 
-try: 
+try:
     firstRun = checkFirstRun()
     startup = True
     timestamps, equities = getChartData()
@@ -27,7 +28,6 @@ except:
     timestamps = []
     equities = []
     trading_thread = None
-    # bcknd_script_pid = 0
     buildTables()
 
 
@@ -37,15 +37,26 @@ def index():
     try: 
         timestamps, equities = getChartData()
         firstRun = checkFirstRun()
+        isUpdateNeeded = check_for_update()
+        currentVersion = getCurrentVersion()
+
     except:
-        firstRun = True
+        firstRun = False
+        isUpdateNeeded = check_for_update()
+        currentVersion = getCurrentVersion()
+
+        print("update: ", isUpdateNeeded)
+        print("Length: ", len(isUpdateNeeded))
+        print("Version: ", currentVersion)
 
     from Alpaca.Scripts.alpaca_trading import is_running
     print("running:", is_running)
     return render_template(
         "index.html",
-         is_running = is_running,
-        firstRun = firstRun
+        is_running = is_running,
+        firstRun = firstRun,
+        isUpdateNeeded = isUpdateNeeded,
+        currentVersion = currentVersion
     )
 
 @app.route('/api/status')
@@ -62,12 +73,11 @@ def status():
         })
     except:
         return jsonify({
-            "running": running
+            "running": is_running
         })
     
 @app.route('/api/logTable')
 def logTable():
-    global running
     global startup
 
 
@@ -101,8 +111,6 @@ def toggle_running():
 
     if should_run:
         started = start_service()
-        log = "Trading started" if started else "Trading already running"
-        createLog(log)
     else:
         stop_service()
 
@@ -144,14 +152,10 @@ def initial_info():
 
     status = initial_setup(api_key,secret_key, pay_date, stock)
 
-
-
-
     if status == False:
         return jsonify(success=False)
     else:
         return jsonify(success=True)
-
 
 @app.route('/api/chart-data')
 def chart_data():

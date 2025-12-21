@@ -208,5 +208,3 @@ def stop_service():
     stop_event.set()
     is_running = False
     return True
-
-getPayDate()

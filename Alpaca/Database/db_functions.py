@@ -41,7 +41,7 @@ BASE_URL = get_base_url(get_env_var())
 
 def getDbPath():
     if platform.system() == "Windows":
-        base_dir = os.getenv('APPDATA')
+        base_dir = os.getenv('LOCALAPPDATA')
         app_folder = "12-Stocks-Auto"
         base_dir = os.path.join(base_dir, app_folder)
         os.makedirs(base_dir, exist_ok=True)
