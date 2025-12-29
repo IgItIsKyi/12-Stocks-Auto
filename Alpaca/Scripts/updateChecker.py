@@ -1,9 +1,6 @@
 import requests
-import subprocess
 import sys
 import os
-import json
-import re
 from pathlib import Path
 REPO = "IgItIsKyi/12-Stocks-Auto"
 APP_DIR = Path(os.getenv("LOCALAPPDATA")) / "12-Stocks-Auto"

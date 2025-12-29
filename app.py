@@ -4,6 +4,7 @@ from Alpaca.Database.db_functions import nextPurchaseDate, getAccountValue, getL
 from datetime import datetime
 from Alpaca.Scripts.updateChecker import check_for_update, getCurrentVersion
 import os
+import subprocess
 import sys
 
 
@@ -172,6 +173,13 @@ def chart_data():
             "labels": ["No Data"],
             "values": [0]
         })
+
+
+@app.route('/api/run-update')
+def run_update():
+    print("Process called...")
+    result = subprocess.run(["python", "updater.py"])
+    return f"Script finished with code {result.returncode}"
 
 
 if __name__ == "__main__":

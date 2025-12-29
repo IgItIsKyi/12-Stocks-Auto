@@ -285,6 +285,17 @@ function initialInfo() {
 }
 
 
+function runUpdate() {
+  fetch('/api/run-update')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('stock').textContent = data.stock;
+      document.getElementById('accountValue').textContent = data.accountValue;
+      document.getElementById('purchaseDate').textContent = " " + data.purchaseDate;
+
+    });
+}
+
 window.addEventListener('load', () => {
   const forceInitial = sessionStorage.getItem('forceInitialLogs') === 'true';
   tableInfo(forceInitial);
