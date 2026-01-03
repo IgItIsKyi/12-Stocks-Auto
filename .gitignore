@@ -6,3 +6,4 @@ build
 dist
 StocksAutoApp.spec
 .env
+version.py
